@@ -256,7 +256,7 @@ class MCTS:
         
         # Executa código
         start_time = time.time()
-        results = self.code_executor.run_tests(node.code, node.problem['tests'])
+        results = self.code_executor.run_tests(node.code, node.problem)
         node.execution_time = time.time() - start_time
         
         # Atualiza estado do nó

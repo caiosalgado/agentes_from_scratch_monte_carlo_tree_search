@@ -47,6 +47,14 @@ class CodeExecutor:
         
         return ""
     
+    def _extract_function_name_from_signature(self, signature: str) -> str:
+        """Extrai nome da função do function_signature"""
+        if not signature:
+            return None
+        
+        match = re.search(r'def\s+(\w+)\s*\(', signature)
+        return match.group(1) if match else None
+    
     def validate_syntax(self, code: str) -> Tuple[bool, str]:
         """Valida sintaxe do código Python"""
         try:
@@ -57,19 +65,16 @@ class CodeExecutor:
         except Exception as e:
             return False, f"Parse Error: {e}"
     
-    def execute_safely(self, code: str, test_cases: List[Dict]) -> Tuple[List[bool], List[str], str]:
+    def execute_safely(self, code: str, test_cases: List[Dict], function_name: str) -> Tuple[List[bool], List[str], str]:
         """Executa código de forma segura com casos de teste"""
         syntax_valid, error_msg = self.validate_syntax(code)
         if not syntax_valid:
             return [False] * len(test_cases), [error_msg] * len(test_cases), error_msg
         
-        # Encontra o nome da função principal
-        function_matches = self.function_pattern.findall(code)
-        if not function_matches:
-            error = "No function definition found"
+        if not function_name:
+            error = "No function name provided"
             return [False] * len(test_cases), [error] * len(test_cases), error
         
-        function_name = function_matches[0]
         results = []
         outputs = []
         
@@ -169,18 +174,29 @@ except Exception as e:
         else:
             return -100.0 + success_rate * 200  # -100 a 0
     
-    def run_tests(self, code: str, test_cases: List[Dict]) -> Dict:
+    def run_tests(self, code: str, problem: Dict) -> Dict:
         """Executa todos os testes e retorna resultado completo"""
         if not code.strip():
             return {
                 'success': False,
-                'test_results': [False] * len(test_cases),
-                'test_outputs': ['No code provided'] * len(test_cases),
+                'test_results': [False] * len(problem['tests']),
+                'test_outputs': ['No code provided'] * len(problem['tests']),
                 'score': -100.0,
                 'error': 'No code provided'
             }
         
-        test_results, test_outputs, error = self.execute_safely(code, test_cases)
+        # Extrai nome da função do function_signature
+        function_name = self._extract_function_name_from_signature(problem.get('function_signature', ''))
+        if not function_name:
+            return {
+                'success': False,
+                'test_results': [False] * len(problem['tests']),
+                'test_outputs': ['No function signature found'] * len(problem['tests']),
+                'score': -100.0,
+                'error': 'No function signature found'
+            }
+        
+        test_results, test_outputs, error = self.execute_safely(code, problem['tests'], function_name)
         score = self.calculate_score(test_results)
         
         return {

@@ -2,36 +2,114 @@ class PromptManager:
     def __init__(self):
         # Prompts base (defaults)
         self._prompts = {
-            'get_weak_answer': """Question: {question}
+            'get_weak_answer': """📋 LEETCODE PROGRAMMING CHALLENGE
+
+🎯 Problem: {title}
+
+📝 Description:
+{description}
+
+⚠️ Constraints:
+{constraints}
+
+🔧 Function Signature (REQUIRED):
+{function_signature}
+
+📊 Test Cases:
+{test_examples}
+
 The response should begin with [reasoning process]...[Verification]... and end with {answer_format}
 Let's think step by step.""",
 
-            'get_weak_hints': """Question: {question}
-Could you provide me with the thought process to solve this problem, but please don't give me the answer or calculation, just the thought process?""",
+            'get_weak_hints': """📋 LEETCODE PROGRAMMING CHALLENGE
 
-            'get_better_answer': """Question: {question}
+🎯 Problem: {title}
+
+📝 Description:
+{description}
+
+🔧 Function Signature:
+{function_signature}
+
+Could you provide me with the thought process to solve this problem, but please don't give me the answer or code, just the thought process?""",
+
+            'get_better_answer': """📋 LEETCODE PROGRAMMING CHALLENGE
+
+🎯 Problem: {title}
+
+📝 Description:
+{description}
+
+🔧 Function Signature (REQUIRED):
+{function_signature}
+
+📊 Test Cases:
+{test_examples}
+
 Previous attempt: {previous_code}
+
+
+📊 Test Results:
+{test_results}
+
 Hints for improvement: {hints}
-Please provide a better solution considering the hints above.""",
 
-            'get_gt_hints': """Question: {question}
-Answer: {answer}
-Please provide helpful hints about how to approach this problem.""",
+Please refine your answer according to the hints.
 
-            'call_reward': """Question: {question}
+The response should begin with [reasoning process]...
+
+[verification]... and end with {answer_format}
+
+Let's think step by step.""",
+
+            'call_reward': """📋 LEETCODE PROGRAMMING CHALLENGE
+
+🎯 Problem: {title}
+
+📝 Description:
+{description}
+
 Code Solution: {code}
 Test Results: {test_results}
-Analyze this code solution strictly and provide a score between [-100, +100].
-Response format: [Analysis]...[Score]...""",
+Analyze this code solution Strictly and Critic, 
+point out every flaw for ervery possible imperfect to minus every possible score! 
+You need to be very harsh and mean in calculating grades, and never give full 
+marks to ensure that the marks are authoritative. \n
+Output a score between [-100,+100], ig. from -100 to +100. \n
+Response format:\n[Analyst]...[Score]...""",
 
-            'refine_prompt': """Question: {question}
+            'refine_prompt': """📋 LEETCODE PROGRAMMING CHALLENGE
+
+🎯 Problem: {title}
+
+📝 Description:
+{description}
+
 Current code: {current_code}
-Issues found: {issues}
-Please refine the code to fix these issues.""",
+Test Results: {test_results}
 
-            'too_bad': """This is intentionally a bad response for baseline comparison.""",
+Since we have a weak answer, could you provide a reflection or
+feedback to improve this answer?
 
-            'hint_prompt': """Question: {question}
+Please evaluate this answer strictly and critically, point out all flaws
+and every possible intervention needed.""",
+
+            'too_bad': """I don't know.""",
+
+            'hint_prompt': """📋 LEETCODE PROGRAMMING CHALLENGE
+
+📝 Description:
+{description}
+
+⚠️ Constraints:
+{constraints}
+
+🔧 Function Signature (REQUIRED):
+{function_signature}
+
+📊 Test Cases:
+{test_examples}
+
 Provide strategic hints for solving this coding problem without giving away the solution."""
         }
         

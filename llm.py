@@ -22,6 +22,20 @@ class LLM:
         })
         return client
     
+    def _format_problem_for_prompt(self, problem: Dict) -> Dict:
+        """Formata dados do problema para usar nos prompts"""
+        test_examples = ""
+        for i, test in enumerate(problem.get('tests', [])[:3]):
+            test_examples += f"Example {i+1}:\n  Input: {test['input']}\n  Output: {test['expected']}\n"
+        
+        return {
+            'title': problem.get('title', 'Unknown'),
+            'description': problem.get('description', ''),
+            'constraints': problem.get('constraints', 'None specified'),
+            'function_signature': problem.get('function_signature', ''),
+            'test_examples': test_examples.strip()
+        }
+
     def _call_llm(self, prompt: str, history: Optional[List[str]] = None, truncate: bool = True) -> Tuple[str, List[str]]:
         """Chama o LLM com prompt e retorna resposta + histórico atualizado"""
         if history is None:
@@ -69,8 +83,8 @@ class LLM:
         """Gera solução inicial fraca para o problema"""
         prompt = self.prompts.get_prompt(
             'get_weak_answer',
-            question=problem['description'],
-            answer_format="Python code with function signature"
+            answer_format="Python code with function signature",
+            **self._format_problem_for_prompt(problem)
         )
         return self._call_llm(prompt)
     
@@ -79,14 +93,16 @@ class LLM:
         if failed_code:
             prompt = self.prompts.get_prompt(
                 'get_better_answer',
-                question=problem['description'],
                 previous_code=failed_code,
-                hints="Think about edge cases and algorithm efficiency"
+                hints="Think about edge cases and algorithm efficiency",
+                test_results="",
+                answer_format="Python code with function signature",
+                **self._format_problem_for_prompt(problem)
             )
         else:
             prompt = self.prompts.get_prompt(
                 'get_weak_hints',
-                question=problem['description']
+                **self._format_problem_for_prompt(problem)
             )
         
         response, _ = self._call_llm(prompt)
@@ -96,9 +112,11 @@ class LLM:
         """Gera solução melhorada baseada em hints"""
         prompt = self.prompts.get_prompt(
             'get_better_answer',
-            question=problem['description'],
             previous_code=current_code,
-            hints=hints
+            hints=hints,
+            test_results="",
+            answer_format="Python code with function signature",
+            **self._format_problem_for_prompt(problem)
         )
         return self._call_llm(prompt, history)
     
@@ -110,9 +128,9 @@ class LLM:
         
         prompt = self.prompts.get_prompt(
             'call_reward',
-            question=problem['description'],
             code=code,
-            test_results=test_summary
+            test_results=test_summary,
+            **self._format_problem_for_prompt(problem)
         )
         
         response, _ = self._call_llm(prompt)
@@ -137,8 +155,8 @@ class LLM:
         """Gera hints baseado na resposta correta (se disponível)"""
         prompt = self.prompts.get_prompt(
             'get_gt_hints',
-            question=problem['description'],
-            answer=correct_answer
+            answer=correct_answer,
+            **self._format_problem_for_prompt(problem)
         )
         response, _ = self._call_llm(prompt)
         return response
@@ -147,9 +165,9 @@ class LLM:
         """Cria prompt específico para refinamento"""
         return self.prompts.get_prompt(
             'refine_prompt',
-            question=problem['description'],
             current_code=current_code,
-            issues=issues
+            test_results=issues,
+            **self._format_problem_for_prompt(problem)
         )
     
     def generate_bad_baseline(self, problem: Dict) -> Tuple[str, List[str]]:
